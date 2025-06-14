@@ -1,7 +1,7 @@
 import logging
 import os
 
-import requests
+# import requests
 from slack_bolt import App
 
 # from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -118,6 +118,21 @@ def command_summary(body, ack, say, logger, client, command):
                     },
                     "label": {"type": "plain_text", "text": "Pip installs", "emoji": True},
                 },
+                {
+                    "type": "input",
+                    "block_id": "other_notes_text_input",
+                    "element": {
+                        "type": "rich_text_input",
+                        "action_id": "other_notes_text_input-action",
+                        "initial_value": {
+                            "type": "rich_text",
+                            "elements": [
+                                {"type": "rich_text_section", "elements": [{"type": "text", "text": "None"}]}
+                            ],
+                        },
+                    },
+                    "label": {"type": "plain_text", "text": "Other notes", "emoji": True},
+                },
                 {"type": "divider"},
                 {
                     "type": "input",
@@ -141,30 +156,73 @@ def handle_summary_submission(ack, body, logger, client):
     logger.debug(body)
     channel_id = body["view"]["private_metadata"]
     state_values = body["view"]["state"]["values"]
+    athena_updated = state_values["athena_updated_text_input"]["athena_updated_text_input-action"]["value"]
     from_ver = state_values["from_version_text_input"]["from_version_text_input-action"]["value"]
     to_ver = state_values["to_version_text_input"]["to_version_text_input-action"]["value"]
     migrations = state_values["migrations_text_input"]["migrations_text_input-action"]["rich_text_value"]
     pip_install = state_values["pip_installs_text_input"]["pip_installs_text_input-action"]["rich_text_value"]
+    other_notes = state_values["other_notes_text_input"]["other_notes_text_input-action"]["rich_text_value"]
     release_notes = state_values["release_note_file_input"]["release_note_file_input_action"]["files"][0]
     logger.debug(f"\n{from_ver}\n {to_ver}\n {migrations}")
 
-    res = requests.get(
-        release_notes["url_private"],
-        headers={"Authorization": f"Bearer {os.environ.get('SLACK_BOT_TOKEN')}"},
-    )
-    file_bytes = res.content
-
-    client.files_upload_v2(
-        channel=channel_id,
-        title=release_notes["name"],
-        filename=release_notes["name"],
-        file=file_bytes,
-    )
-
-    # client.chat_postMessage(
-    #     channel=channel_id,
-    #     text=f"Release notes <{release_notes['permalink']}|{release_notes['name']}>"
+    # res = requests.get(
+    #     release_notes["url_private"],
+    #     headers={"Authorization": f"Bearer {os.environ.get('SLACK_BOT_TOKEN')}"},
     # )
+    # file_bytes = res.content
+    #
+    # client.files_upload_v2(
+    #     channel=channel_id,
+    #     title=release_notes["name"],
+    #     filename=release_notes["name"],
+    #     file=file_bytes,
+    # )
+
+    client.chat_postMessage(
+        channel=channel_id,
+        # text=f"Release notes <{release_notes['permalink']}|{release_notes['name']}>",
+        blocks=[
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": ":owl:  Athena Deployment  :owl:"},
+            },
+            {
+                "type": "context",
+                "elements": [{"text": f"*{athena_updated}*  |  {from_ver} to {to_ver}", "type": "mrkdwn"}],
+            },
+            {"type": "divider"},
+            {"type": "section", "text": {"type": "mrkdwn", "text": "*Migrations:*"}},
+            migrations,
+            {"type": "section", "text": {"type": "mrkdwn", "text": "*Python packages installed:*"}},
+            pip_install,
+            {"type": "section", "text": {"type": "mrkdwn", "text": "*Other notes:*"}},
+            other_notes,
+            {"type": "divider"},
+            # {
+            #     "type": "context",
+            #     "elements": [
+            #         {"type": "mrkdwn", "text": f"<{release_notes['permalink']}|{release_notes['name']}>"}
+            #     ],
+            # },
+        ],
+        attachments=[
+            {
+                "color": "#c80d0d",
+                "blocks": [
+                    {
+                        "type": "section",
+                        "fields": [
+                            {"type": "mrkdwn", "text": "*Release notes:*"},
+                            {
+                                "type": "mrkdwn",
+                                "text": f"<{release_notes['permalink']}|{release_notes['name']}>",
+                            },
+                        ],
+                    },
+                ],
+            }
+        ],
+    )
 
 
 if __name__ == "__main__":
