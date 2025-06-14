@@ -144,6 +144,17 @@ def command_summary(body, ack, say, logger, client, command):
                         "max_files": 1,
                     },
                 },
+                {
+                    "type": "input",
+                    "block_id": "checklist_note_file_input",
+                    "label": {"type": "plain_text", "text": "Upload Deployment Checklist"},
+                    "element": {
+                        "type": "file_input",
+                        "action_id": "checklist_note_file_input_action",
+                        "filetypes": ["pdf"],
+                        "max_files": 1,
+                    },
+                },
             ],
         },
     )
@@ -162,6 +173,7 @@ def handle_summary_submission(ack, body, logger, client):
     pip_install = state_values["pip_installs_text_input"]["pip_installs_text_input-action"]["rich_text_value"]
     other_notes = state_values["other_notes_text_input"]["other_notes_text_input-action"]["rich_text_value"]
     release_notes = state_values["release_note_file_input"]["release_note_file_input_action"]["files"][0]
+    checklist = state_values["checklist_note_file_input"]["checklist_note_file_input_action"]["files"][0]
     logger.debug(f"\n{from_ver}\n {to_ver}\n {migrations}")
 
     # res = requests.get(
@@ -179,7 +191,7 @@ def handle_summary_submission(ack, body, logger, client):
 
     client.chat_postMessage(
         channel=channel_id,
-        text=f"Athena Deployment",
+        text="Athena Deployment",
         blocks=[
             {
                 "type": "header",
@@ -209,6 +221,16 @@ def handle_summary_submission(ack, body, logger, client):
                             {
                                 "type": "mrkdwn",
                                 "text": f"<{release_notes['permalink']}|{release_notes['name']}>",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "section",
+                        "fields": [
+                            {"type": "mrkdwn", "text": "*Deployment checklist:*"},
+                            {
+                                "type": "mrkdwn",
+                                "text": f"<{checklist['permalink']}|{checklist['name']}>",
                             },
                         ],
                     },
