@@ -13,6 +13,11 @@
       devShells.${system} = {
         default = pkgs.mkShell {
           venvDir = ".venv";
+          postShellHook = ''
+            set -a
+            source .env.dev
+            set +a
+          '';
           packages =
             with pkgs;
             [
