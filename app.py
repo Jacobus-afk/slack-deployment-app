@@ -1,7 +1,6 @@
 import logging
 import os
 
-# import requests
 from slack_bolt import App
 
 # from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -180,7 +179,7 @@ def handle_summary_submission(ack, body, logger, client):
 
     client.chat_postMessage(
         channel=channel_id,
-        # text=f"Release notes <{release_notes['permalink']}|{release_notes['name']}>",
+        text=f"Athena Deployment",
         blocks=[
             {
                 "type": "header",
@@ -198,12 +197,6 @@ def handle_summary_submission(ack, body, logger, client):
             {"type": "section", "text": {"type": "mrkdwn", "text": "*Other notes:*"}},
             other_notes,
             {"type": "divider"},
-            # {
-            #     "type": "context",
-            #     "elements": [
-            #         {"type": "mrkdwn", "text": f"<{release_notes['permalink']}|{release_notes['name']}>"}
-            #     ],
-            # },
         ],
         attachments=[
             {
