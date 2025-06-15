@@ -4,5 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115.12",
     "slack-bolt>=1.23.0",
+]
+
+[dependency-groups]
+dev = [
+    "uvicorn>=0.34.3",
 ]

@@ -1,7 +1,9 @@
 import logging
 import os
 
+from fastapi import FastAPI, Request
 from slack_bolt import App
+from slack_bolt.adapter.fastapi import SlackRequestHandler
 
 # from slack_bolt.adapter.socket_mode import SocketModeHandler
 
@@ -239,7 +241,15 @@ def handle_summary_submission(ack, body, logger, client):
         ],
     )
 
+fastapi_app = FastAPI()
+handler = SlackRequestHandler(app)
+
+@fastapi_app.post("/summary/events")
+async def slack_events(req: Request):
+    return await handler.handle(req)
 
 if __name__ == "__main__":
-    app.start(port=int(os.environ.get("PORT", 3000)))
+    import uvicorn
+    uvicorn.run(fastapi_app, host="0.0.0.0", port=int(os.environ.get("PORT", 3000)))
+    # app.start(port=int(os.environ.get("PORT", 3000)))
     # SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
